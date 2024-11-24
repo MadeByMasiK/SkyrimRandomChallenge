@@ -5,6 +5,7 @@ import threading
 import time
 from gtts import gTTS
 import pygame
+import os
 
 # Open and read the challenge JSON file
 with open('challengesData.json', 'r', encoding='utf-8') as file:
@@ -16,12 +17,12 @@ with open('challengesPunishments.json', 'r', encoding='utf-8') as file:
     data = json.load(file)
 punishments = data['punishments']
 
-seed(time.time())
-
 # Language in which you want to convert
 language = 'en'
 
 def selectChallenge():
+    seed(time.time())
+
     randomizedChallengeList = challenges.copy()
     random.shuffle(randomizedChallengeList)
 
@@ -43,6 +44,10 @@ def selectChallenge():
     # have a high speed
     challenge = gTTS(text=challengeText, lang=language, slow=False)
     punishment = gTTS(text=punishmentText, lang=language, slow=False)
+
+    # File paths
+    challenge_file = "challenge.mp3"
+    punishment_file = "punishment.mp3"
 
     # Saving the converted audio in a mp3 file
     challenge.save("challenge.mp3")
@@ -68,7 +73,28 @@ def selectChallenge():
     # Wait until playback is finished
     while pygame.mixer.music.get_busy():
         time.sleep(0.1)
+    # Stop music before removing the files
+    pygame.mixer.music.stop()
+    # Explicitly quitting the mixer to release the files
+    pygame.mixer.quit()
+    # Short delay to allow for resource cleanup
+    time.sleep(0.1)
 
     print("Audio playback completed.")
 
-selectChallenge()
+    # Now remove the audio files after playback
+    if os.path.exists(challenge_file):
+        os.remove(challenge_file)
+    if os.path.exists(punishment_file):
+        os.remove(punishment_file)
+
+print("Give me the minimum amount of time for the random timer:")
+min_time = input()
+print("Give me the maximum amount of time for the random timer:")
+max_time = input()
+
+while True:
+    selectChallenge()
+    random_interval = random.randint(int(min_time), int(max_time))  # Random interval between 10 and 30 minutes (600-1800 seconds)
+    print(f"Next call in {random_interval / 60:.2f} minutes / {random_interval} seconds")
+    time.sleep(random_interval)  # Wait for the random interval
